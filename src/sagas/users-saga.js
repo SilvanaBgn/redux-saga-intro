@@ -12,7 +12,11 @@ function* getUsersMiddle() {
     yield put(actions.getUsersSuccess({ // put is the dispatch of the saga
       items: result.data.data
     }));
-  } catch (e) {}
+  } catch (e) {
+    yield put(actions.usersError({
+      error: 'An error ocurred when trying to get the user'
+    }));
+  }
 }
 
 // watcher-saga: it watches an action to intercept it when it was dispatched.
@@ -32,7 +36,9 @@ function* createUserMiddle(action) {
     });
     yield call(getUsersMiddle);
   } catch(e) {
-
+    yield put(actions.usersError({
+      error: 'An error ocurred when trying to create the user'
+    }));
   }
 }
 
@@ -49,12 +55,16 @@ function* deleteUserMiddle(userId) {
     yield call(api.deleteUser, userId);
     yield call(getUsersMiddle);
   } catch(e) {
-
+    yield put(actions.usersError({
+      error: 'An error ocurred when trying to delete the user'
+    }));
   }
 }
 
 function* watchDeleteUserRequest() {
-  // take is a lower level effect, so we cannot pass a worker
+  // take is a lower level effect, so we cannot pass a worker-saga
+  // we wrap it in a while(true), it's blocking saga, for when we want to wait for an action or api call to resolve before we allow the user to call it again.
+  // i.e: Logging out the current user, Validating a reset password token, Sending the reset password email, Actually resetting the password
   while(true) {
     const action = yield take(actions.Types.DELETE_USER_REQUEST, deleteUserMiddle);
     yield call(deleteUserMiddle, {
