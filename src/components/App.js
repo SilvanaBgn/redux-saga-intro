@@ -1,18 +1,18 @@
 import React, { useEffect } from 'react';
-import {connect} from 'react-redux';
-import {getUsersRequest} from '../actions/users';
+import { connect } from 'react-redux';
+import { getUsersRequest, createUserRequest } from '../actions/users';
 import NewUserForm from './NewUserForm';
 
 import UsersList from './UsersList';
 
-
-function App(props) {
+const App = (props) => {
   useEffect(()=> {
     props.getUsersRequest();
   }, []);
 
   const handleSubmit = ({firstName, lastName}) => {
-    console.log('App.js - handleSubmit', firstName, lastName)
+    console.log('App.js - handleSubmit', firstName, lastName);
+    props.createUserRequest({firstName, lastName});
   }
 
   const users = props.users;
@@ -31,5 +31,6 @@ const mapStateToProps = ({users}) => {
 }
 
 export default connect(mapStateToProps, {
-  getUsersRequest
+  getUsersRequest,
+  createUserRequest 
 })(App);

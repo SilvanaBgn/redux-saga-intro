@@ -1,14 +1,13 @@
 // This file will take care of all the sagas related to users actions
-import { takeEvery, call, fork, put } from 'redux-saga/effects';
+import { takeEvery, takeLatest, call, fork, put } from 'redux-saga/effects';
 import * as actions from '../actions/users'; //importing Types and both functions
 import * as api from '../api/api-users'
 
 // worker-saga: it executes the middle function
 function* getUsersMiddle() {
   try {
-    console.log('getUsersMiddle');
     const result = yield call(api.getUsers); // call works as an async await
-    console.log('result saga', result);
+    console.log('Saga getUsersMiddle - result_saga', result);
     yield put(actions.getUsersSuccess({ // put is the dispatch of the saga
       items: result.data.data
     }));
@@ -21,9 +20,29 @@ function* watchGetUsersRequest() {
   yield takeEvery(actions.Types.GET_USERS_REQUEST, getUsersMiddle);
 }
 
+
+function* createUserMiddle(action) {
+  console.log('Saga createUser - action:', action);
+  try {
+    const {firstName, lastName} = action.payload;
+    yield call(api.createUser, {
+      firstName,
+      lastName
+    });
+    yield call(getUsersMiddle);
+  } catch(e) {}
+}
+
+function* watchCreateUserRequest() {
+  // takeLatest will stop every other saga that was executing in the takeLatest queue and will only execute this last one.
+  // i.e. If we have 2 buttons filters for the users-list, when we press the 2nd filter quickly after the 1st one, it's cause we don't care about the result of the 1st one
+  yield takeLatest(actions.Types.CREATE_USER_REQUEST, createUserMiddle);
+}
+
 // here we do a fork for every watcher-saga
 const usersSagas = [
-  fork(watchGetUsersRequest)
+  fork(watchGetUsersRequest), 
+  fork(watchCreateUserRequest) 
 ];
 
 export default usersSagas;
