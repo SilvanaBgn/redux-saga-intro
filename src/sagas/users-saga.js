@@ -1,8 +1,9 @@
 // This file will take care of all the sagas related to users actions
-import { takeEvery, takeLatest, call, fork, put } from 'redux-saga/effects';
+import { takeEvery, takeLatest, take, call, fork, put } from 'redux-saga/effects';
 import * as actions from '../actions/users'; //importing Types and both functions
 import * as api from '../api/api-users'
 
+//---GET---//
 // worker-saga: it executes the middle function
 function* getUsersMiddle() {
   try {
@@ -20,7 +21,7 @@ function* watchGetUsersRequest() {
   yield takeEvery(actions.Types.GET_USERS_REQUEST, getUsersMiddle);
 }
 
-
+//---CREATE---//
 function* createUserMiddle(action) {
   console.log('Saga createUser - action:', action);
   try {
@@ -30,7 +31,9 @@ function* createUserMiddle(action) {
       lastName
     });
     yield call(getUsersMiddle);
-  } catch(e) {}
+  } catch(e) {
+
+  }
 }
 
 function* watchCreateUserRequest() {
@@ -39,10 +42,32 @@ function* watchCreateUserRequest() {
   yield takeLatest(actions.Types.CREATE_USER_REQUEST, createUserMiddle);
 }
 
+//---DELETE---//
+function* deleteUserMiddle(userId) {
+  console.log('Saga deleteUser');
+  try {
+    yield call(api.deleteUser, userId);
+    yield call(getUsersMiddle);
+  } catch(e) {
+
+  }
+}
+
+function* watchDeleteUserRequest() {
+  // take is a lower level effect, so we cannot pass a worker
+  while(true) {
+    const action = yield take(actions.Types.DELETE_USER_REQUEST, deleteUserMiddle);
+    yield call(deleteUserMiddle, {
+      userId: action.payload.userId
+    })
+  }
+}
+
 // here we do a fork for every watcher-saga
 const usersSagas = [
   fork(watchGetUsersRequest), 
-  fork(watchCreateUserRequest) 
+  fork(watchCreateUserRequest), 
+  fork(watchDeleteUserRequest) 
 ];
 
 export default usersSagas;

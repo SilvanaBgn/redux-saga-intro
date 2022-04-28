@@ -1,3 +1,7 @@
+# Notes
+
+Run it in Firefox (in Chrome, the axios post doesn't work well). Besides, the delete function won't work finally cause of CORS.
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
